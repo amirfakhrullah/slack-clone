@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm/expressions";
-import { db } from "~/db/config";
+import { db } from "~/db/drizzle.config";
 import { members } from "~/db/schema/members";
 import { teams } from "~/db/schema/teams";
 import { users } from "~/db/schema/users";
