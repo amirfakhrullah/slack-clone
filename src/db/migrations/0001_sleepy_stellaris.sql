@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS user_id_team_id_idx ON members ("team_id","user_id");

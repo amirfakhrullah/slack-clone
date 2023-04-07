@@ -1,13 +1,13 @@
-import { index, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import type { InferModel } from "drizzle-orm";
 import { channels } from "./channels";
 
 export const chats = pgTable(
   "chats",
   {
-    id: varchar("id", { length: 191 }).primaryKey(),
+    id: serial("id").primaryKey(),
     message: varchar("message", { length: 256 }).notNull(),
-    channelId: varchar("channel_id", { length: 191 }).references(
+    channelId: integer("channel_id").references(
       () => channels.id
     ),
     receiverId: varchar("receiver_id", { length: 191 }),

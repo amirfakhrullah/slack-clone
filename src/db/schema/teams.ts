@@ -1,8 +1,8 @@
-import { pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import type { InferModel } from "drizzle-orm";
 
 export const teams = pgTable("teams", {
-  id: varchar("id", { length: 191 }).primaryKey(),
+  id: serial("id").primaryKey(),
   name: varchar("name", { length: 256 }).notNull(),
   ownerId: varchar("owner", { length: 191 }).notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

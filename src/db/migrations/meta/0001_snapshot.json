@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "30fc0c5b-3825-4133-af80-384b50ecf2df",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d2fad547-40ed-4e27-957f-c3276acaec75",
+  "prevId": "30fc0c5b-3825-4133-af80-384b50ecf2df",
   "tables": {
     "channels": {
       "name": "channels",
@@ -158,7 +158,16 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "user_id_team_id_idx": {
+          "name": "user_id_team_id_idx",
+          "columns": [
+            "team_id",
+            "user_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "members_team_id_teams_id_fk": {
           "name": "members_team_id_teams_id_fk",

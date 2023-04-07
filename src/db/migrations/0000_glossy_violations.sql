@@ -2,33 +2,32 @@ DROP TABLE "chats";
 DROP TABLE "channels";
 DROP TABLE "members";
 DROP TABLE "teams";
-DROP TABLE "users";
 
 CREATE TABLE IF NOT EXISTS "channels" (
-	"id" varchar(191) PRIMARY KEY NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(256) NOT NULL,
-	"team_id" varchar(191) NOT NULL,
+	"team_id" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "chats" (
-	"id" varchar(191) PRIMARY KEY NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"message" varchar(256) NOT NULL,
-	"channel_id" varchar(191),
+	"channel_id" integer,
 	"receiver_id" varchar(191),
 	"owner_id" varchar(191) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "members" (
-	"id" varchar(191) PRIMARY KEY NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" varchar(191) NOT NULL,
-	"team_id" varchar(191) NOT NULL,
+	"team_id" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS "teams" (
-	"id" varchar(191) PRIMARY KEY NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(256) NOT NULL,
 	"owner" varchar(191) NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL

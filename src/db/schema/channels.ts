@@ -1,13 +1,13 @@
-import { index, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, timestamp, varchar } from "drizzle-orm/pg-core";
 import type { InferModel } from "drizzle-orm";
 import { teams } from "./teams";
 
 export const channels = pgTable(
   "channels",
   {
-    id: varchar("id", { length: 191 }).primaryKey(),
+    id: serial("id").primaryKey(),
     name: varchar("name", { length: 256 }).notNull(),
-    teamId: varchar("team_id", { length: 191 })
+    teamId: integer("team_id")
       .notNull()
       .references(() => teams.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),

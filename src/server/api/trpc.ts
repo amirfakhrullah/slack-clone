@@ -6,7 +6,6 @@ export const createTRPCContext = (opts: CreateNextContextOptions) => {
   const { req } = opts;
   const session = getAuth(req);
   return {
-    ...opts,
     db,
     userId: session.userId,
   };
