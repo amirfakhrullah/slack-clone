@@ -3,7 +3,8 @@ import { members } from "~/db/schema/members";
 import { teams } from "~/db/schema/teams";
 import { eq } from "drizzle-orm/expressions";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter } from "~/server/api/trpc";
+import { publicProcedure } from "../procedures";
 
 export const exampleRouter = createTRPCRouter({
   hello: publicProcedure

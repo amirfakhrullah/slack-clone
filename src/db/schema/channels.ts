@@ -13,8 +13,7 @@ export const channels = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({
-    // multiple columns index
-    nameTeamIdIdx: index("name_team_id_idx").on(table.name, table.teamId),
+    teamIdIdx: index("team_id").on(table.teamId),
   })
 );
 

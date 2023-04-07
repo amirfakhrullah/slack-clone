@@ -1,17 +1,10 @@
-import {
-  pgTable,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 import type { InferModel } from "drizzle-orm";
-import { users } from "./users";
 import { teams } from "./teams";
 
 export const members = pgTable("members", {
   id: varchar("id", { length: 191 }).primaryKey(),
-  userId: varchar("user_id", { length: 191 })
-    .notNull()
-    .references(() => users.id),
+  userId: varchar("user_id", { length: 191 }).notNull(),
   teamId: varchar("team_id", { length: 191 })
     .notNull()
     .references(() => teams.id),

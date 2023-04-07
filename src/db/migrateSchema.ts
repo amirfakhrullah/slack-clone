@@ -9,7 +9,11 @@ const migrateSchema = async () => {
   });
   const db = drizzle(migrationsClient);
 
-  await migrate(db, { migrationsFolder: "./migrations" });
+  /**
+   * If using script "npm run migrate-schema", set `{ migrationsFolder: "./src/db/migrations" }`
+   * Else, set `{ migrationsFolder: "./migrations" }`
+   */
+  await migrate(db, { migrationsFolder: "./src/db/migrations" });
 };
 
 void migrateSchema()

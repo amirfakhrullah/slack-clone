@@ -1,20 +1,19 @@
 import { z } from "zod";
 
 /**
- * Specify your server-side environment variables schema here. This way you can ensure the app isn't
- * built with invalid env vars.
+ * server-side environment variable schema
  */
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
   PG_DB_URL: z.string(),
+  CLERK_SECRET_KEY: z.string(),
 });
 
 /**
- * Specify your client-side environment variables schema here. This way you can ensure the app isn't
- * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
+ * client-side environment variables schema
  */
 const client = z.object({
-  // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
 });
 
 /**
@@ -25,7 +24,12 @@ const client = z.object({
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
+  // server
   PG_DB_URL: process.env.PG_DB_URL,
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+  // client
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 };
 
 // Don't touch the part below
