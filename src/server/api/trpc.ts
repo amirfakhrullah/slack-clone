@@ -1,4 +1,4 @@
-import { db } from "~/db/drizzle.config";
+import { db } from "../../db/drizzle.config";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { getAuth } from "@clerk/nextjs/server";
 import { type NodeHTTPCreateContextFnOptions } from "@trpc/server/dist/adapters/node-http";

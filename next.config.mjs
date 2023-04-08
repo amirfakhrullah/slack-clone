@@ -8,6 +8,11 @@
 const config = {
   reactStrictMode: true,
 
+  publicRuntimeConfig: {
+    // Will be available on both server and client
+    APP_URL: process.env.APP_URL,
+    WS_URL: process.env.WS_URL,
+  },
   /**
    * If you have the "experimental: { appDir: true }" setting enabled, then you
    * must comment the below `i18n` config out.
