@@ -12,6 +12,7 @@ export const publicProcedure = procedure;
 
 /**
  * Protected procedure for users
+ * `ctx.userId` will be a type of string
  */
 export const userProcedure = publicProcedure.use(({ ctx, next }) => {
   if (!ctx.userId) {
@@ -27,7 +28,9 @@ export const userProcedure = publicProcedure.use(({ ctx, next }) => {
 });
 
 /**
- * Protected procedure for teamAdmin
+ * Protected procedure for team users
+ * @param isAdmin pass true if want to set the procedure for admin
+ * additional data in ctx - `team` and `member`
  */
 export const teamHOFProcedure = (isAdmin: boolean) =>
   userProcedure

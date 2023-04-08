@@ -7,6 +7,11 @@ import { members } from "~/db/schema/members";
 import { and, eq, inArray, ne } from "drizzle-orm/expressions";
 import { channels } from "~/db/schema/channels";
 import { chats } from "~/db/schema/chats";
+import { clerkClient } from "@clerk/nextjs/server";
+import {
+  MAX_GROUPS_CREATED_PER_USER,
+  MAX_MEMBERS_PER_GROUP,
+} from "~/limitVars";
 
 export const teamsRouter = createTRPCRouter({
   create: userProcedure
@@ -17,6 +22,21 @@ export const teamsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input: { name } }) => {
       const { db, userId } = ctx;
+
+      // validation: MAX_GROUPS_CREATED_PER_USER
+      const currentTeamsOwned = await db
+        .select({
+          team: teams.id,
+        })
+        .from(teams)
+        .where(eq(teams.ownerId, userId));
+
+      if (currentTeamsOwned.length >= MAX_GROUPS_CREATED_PER_USER) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `A user can only create ${MAX_GROUPS_CREATED_PER_USER} groups only`,
+        });
+      }
 
       const team = (
         await db
@@ -52,15 +72,15 @@ export const teamsRouter = createTRPCRouter({
       }
 
       return {
-        ...team,
-        memberId: member.id,
+        team,
+        member,
       };
     }),
 
   get: teamHOFProcedure(false).query(async ({ ctx }) => {
     const { db, team, member, userId } = ctx;
 
-    const memberLists = await db
+    const remainingMemberLists = await db
       .select()
       .from(members)
       // only get the remaining members, since we already get self member data in procedure
@@ -68,7 +88,7 @@ export const teamsRouter = createTRPCRouter({
 
     return {
       team,
-      members: [member, ...memberLists],
+      members: [member, ...remainingMemberLists],
     };
   }),
 
@@ -122,8 +142,39 @@ export const teamsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, team } = ctx;
+      const { db, team, member } = ctx;
       const { members: requestedMembers } = input;
+
+      // check is the userIds exist in Clerk
+      const users = await clerkClient.users.getUserList({
+        userId: requestedMembers.map((member) => member.userId),
+      });
+
+      if (users.length !== requestedMembers.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Some userIds don't exist",
+        });
+      }
+
+      // validation: MAX_MEMBERS_PER_GROUP
+      const currentMembers = [
+        member,
+        ...(await db
+          .select()
+          .from(members)
+          .where(and(eq(members.teamId, team.id), ne(members.id, member.id)))),
+      ];
+
+      if (
+        currentMembers.length + requestedMembers.length >
+        MAX_MEMBERS_PER_GROUP
+      ) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `A team is only allowed to have ${MAX_MEMBERS_PER_GROUP} members only`,
+        });
+      }
 
       await db.insert(members).values(
         requestedMembers.map((obj) => ({
@@ -151,26 +202,44 @@ export const teamsRouter = createTRPCRouter({
         );
     }),
 
-  delete: teamHOFProcedure(true).mutation(async ({ ctx }) => {
+  hardDelete: teamHOFProcedure(true).mutation(async ({ ctx }) => {
     const { db, team } = ctx;
 
-    const teamChannels = await db
+    /**
+     * Need to run in sequence since some tables relies on other tables
+     * Sequence:
+     * 1- Get all channelIds that belong to the team
+     * 2- Delete all chats with the channelIds
+     * 3- Delete all channels with the teamId
+     * 4- Delete all members with the teamId
+     * 5- Delete the team by teamId
+     */
+    await db
       .select({
         channelId: channels.id,
       })
       .from(channels)
-      .where(eq(channels.teamId, team.id));
-
-    await Promise.all([
-      db.delete(chats).where(
-        inArray(
-          chats.channelId,
-          teamChannels.map((channel) => channel.channelId)
-        )
-      ),
-      db.delete(channels).where(eq(channels.teamId, team.id)),
-      db.delete(members).where(eq(members.teamId, team.id)),
-      db.delete(teams).where(eq(teams.id, team.id)),
-    ]);
+      .where(eq(channels.teamId, team.id))
+      .then((teamChannels) =>
+        db
+          .delete(chats)
+          .where(
+            inArray(
+              chats.channelId,
+              teamChannels.map((channel) => channel.channelId)
+            )
+          )
+          .then(() =>
+            db
+              .delete(channels)
+              .where(eq(channels.teamId, team.id))
+              .then(() =>
+                db
+                  .delete(members)
+                  .where(eq(members.teamId, team.id))
+                  .then(() => db.delete(teams).where(eq(teams.id, team.id)))
+              )
+          )
+      );
   }),
 });
