@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { Server } from "ws";
 import { appRouter } from "./root";
@@ -10,17 +9,8 @@ const wss = new Server({
     const token = info.req.headers["authorization"];
     const sessionId = info.req.headers["session-id"];
 
-    if (
-      !token ||
-      typeof token !== "string" ||
-      !sessionId ||
-      typeof sessionId !== "string"
-    ) {
-      cb(false, 401, "Unauthorized");
-      return;
-    }
     info.req.token = token;
-    info.req.sessionId = sessionId;
+    info.req.sessionId = typeof sessionId === "string" ? sessionId : undefined;
     cb(true);
   },
 });

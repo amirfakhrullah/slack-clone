@@ -17,11 +17,9 @@ export const createTRPCContext = async (
   if ("cookies" in req) {
     const session = getAuth(req);
     userId = session.userId;
-  } else {
-    if (req.token && req.sessionId) {
-      const session = await sessions.verifySession(req.sessionId, req.token);
-      userId = session.userId;
-    }
+  } else if (req.token && req.sessionId) {
+    const session = await sessions.verifySession(req.sessionId, req.token);
+    userId = session.userId;
   }
   return {
     db,

@@ -1,8 +1,21 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
+import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
+  api.chat.onAddToChannel.useSubscription(
+    {
+      channelId: 122123,
+      teamId: 123123,
+    },
+    {
+      onData: (data) => {
+        console.log(data);
+      },
+    }
+  );
+
   return (
     <>
       <Head>
@@ -22,10 +35,7 @@ const Home: NextPage = () => {
               target="_blank"
             >
               <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
+              <div className="text-lg">sdbvsb</div>
             </Link>
             <Link
               className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
@@ -39,8 +49,7 @@ const Home: NextPage = () => {
               </div>
             </Link>
           </div>
-          <p className="text-2xl text-white">
-          </p>
+          <p className="text-2xl text-white"></p>
         </div>
       </main>
     </>

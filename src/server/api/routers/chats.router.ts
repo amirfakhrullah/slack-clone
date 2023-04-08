@@ -6,9 +6,10 @@ import { and, desc, eq, or } from "drizzle-orm/expressions";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError, type inferRouterOutputs } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
+import EventEmitter, { type MyEventEmitter } from "events";
 
 // types in types.d.ts
-export const ee = new MyEventEmitter();
+export const ee = new EventEmitter() as MyEventEmitter;
 
 export const chatsRouter = createTRPCRouter({
   // subscriptions for one-to-one chats
