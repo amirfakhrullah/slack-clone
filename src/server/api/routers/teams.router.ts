@@ -4,21 +4,25 @@ import { createTRPCRouter } from "../trpc";
 import { teams } from "~/db/schema/teams";
 import { TRPCError } from "@trpc/server";
 import { members } from "~/db/schema/members";
-import { and, eq, inArray } from "drizzle-orm/expressions";
+import { and, eq, inArray, ne } from "drizzle-orm/expressions";
 import { channels } from "~/db/schema/channels";
 import { chats } from "~/db/schema/chats";
 
 export const teamsRouter = createTRPCRouter({
   create: userProcedure
-    .input(z.string().min(4).max(256))
-    .mutation(async ({ ctx, input: groupName }) => {
+    .input(
+      z.object({
+        name: z.string().min(4).max(256),
+      })
+    )
+    .mutation(async ({ ctx, input: { name } }) => {
       const { db, userId } = ctx;
 
       const team = (
         await db
           .insert(teams)
           .values({
-            name: groupName,
+            name,
             ownerId: userId,
           })
           .returning({
@@ -38,6 +42,7 @@ export const teamsRouter = createTRPCRouter({
           .values({
             userId,
             teamId: team.id,
+            role: "admin",
           })
           .returning({ id: members.id })
       )[0];
@@ -52,7 +57,20 @@ export const teamsRouter = createTRPCRouter({
       };
     }),
 
-  get: teamHOFProcedure(false).query(({ ctx }) => ctx.team),
+  get: teamHOFProcedure(false).query(async ({ ctx }) => {
+    const { db, team, member, userId } = ctx;
+
+    const memberLists = await db
+      .select()
+      .from(members)
+      // only get the remaining members, since we already get self member data in procedure
+      .where(and(eq(members.teamId, team.id), ne(members.userId, userId)));
+
+    return {
+      team,
+      members: [member, ...memberLists],
+    };
+  }),
 
   update: teamHOFProcedure(true)
     .input(
@@ -72,20 +90,46 @@ export const teamsRouter = createTRPCRouter({
         .where(eq(teams.id, team.id));
     }),
 
-  addMembers: teamHOFProcedure(true)
+  updateMemberRole: teamHOFProcedure(true)
     .input(
       z.object({
-        members: z.array(z.string().max(191)),
+        memberId: z.number(),
+        role: z.enum(["user", "admin"]),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, team } = ctx;
-      const { members: userIds } = input;
+      const { memberId, role } = input;
+
+      return await db
+        .update(members)
+        .set({
+          role,
+        })
+        .where(and(eq(members.teamId, team.id), eq(members.id, memberId)))
+        .returning();
+    }),
+
+  addMembers: teamHOFProcedure(true)
+    .input(
+      z.object({
+        members: z.array(
+          z.object({
+            userId: z.string().max(191),
+            role: z.enum(["user", "admin"]).optional(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, team } = ctx;
+      const { members: requestedMembers } = input;
 
       await db.insert(members).values(
-        userIds.map((userId) => ({
+        requestedMembers.map((obj) => ({
           teamId: team.id,
-          userId,
+          userId: obj.userId,
+          ...(obj.role && { role: obj.role }),
         }))
       );
     }),
@@ -93,17 +137,17 @@ export const teamsRouter = createTRPCRouter({
   removeMembers: teamHOFProcedure(true)
     .input(
       z.object({
-        members: z.array(z.string().max(191)),
+        memberIds: z.array(z.number()),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const { db, team } = ctx;
-      const { members: userIds } = input;
+      const { memberIds } = input;
 
       await db
         .delete(members)
         .where(
-          and(eq(members.teamId, team.id), inArray(members.userId, userIds))
+          and(eq(members.teamId, team.id), inArray(members.id, memberIds))
         );
     }),
 

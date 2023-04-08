@@ -1,5 +1,6 @@
 import {
   integer,
+  pgEnum,
   pgTable,
   serial,
   timestamp,
@@ -9,6 +10,8 @@ import {
 import type { InferModel } from "drizzle-orm";
 import { teams } from "./teams";
 
+export const UserRole = pgEnum("role", ["user", "admin"]);
+
 export const members = pgTable(
   "members",
   {
@@ -17,6 +20,7 @@ export const members = pgTable(
     teamId: integer("team_id")
       .notNull()
       .references(() => teams.id),
+    role: UserRole("role").notNull().default("user"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({

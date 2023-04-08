@@ -3,6 +3,7 @@ import { procedure } from "./trpc";
 import { TRPCError } from "@trpc/server";
 import { teams } from "~/db/schema/teams";
 import { and, eq } from "drizzle-orm/expressions";
+import { members } from "~/db/schema/members";
 
 /**
  * Public (unauthenticated) procedure
@@ -38,28 +39,34 @@ export const teamHOFProcedure = (isAdmin: boolean) =>
     .use(async ({ ctx, input, next }) => {
       const { db, userId } = ctx;
 
-      const team = (
-        await db
-          .select()
-          .from(teams)
-          .where(and(eq(teams.id, input.teamId)))
-      )[0];
+      const foundMembers = await db
+        .select({
+          team: teams,
+          member: members,
+        })
+        .from(members)
+        .innerJoin(teams, eq(members.teamId, teams.id))
+        .where(
+          and(eq(members.teamId, input.teamId), eq(members.userId, userId))
+        );
 
-      if (!team) {
+      if (!foundMembers[0]) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Team not found",
         });
       }
 
-      if (isAdmin && team.ownerId !== userId) {
+      const self = foundMembers[0];
+
+      if (isAdmin && self.member.role !== "admin") {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
 
       return next({
         ctx: {
           ...ctx,
-          team,
+          ...self,
         },
       });
     });

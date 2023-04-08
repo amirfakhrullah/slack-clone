@@ -13,6 +13,12 @@
       "version": "5",
       "when": 1680897698594,
       "tag": "0001_sleepy_stellaris"
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1680927476776,
+      "tag": "0002_wooden_brood"
     }
   ]
 }
