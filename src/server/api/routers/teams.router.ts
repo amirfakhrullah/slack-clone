@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { teamHOFProcedure, userProcedure } from "../procedures";
+import { createTeamProcedure, userProcedure } from "../procedures";
 import { createTRPCRouter } from "../trpc";
 import { teams } from "~/db/schema/teams";
-import { TRPCError } from "@trpc/server";
+import { TRPCError, type inferRouterOutputs } from "@trpc/server";
 import { members } from "~/db/schema/members";
 import { and, eq, inArray, ne } from "drizzle-orm/expressions";
 import { channels } from "~/db/schema/channels";
@@ -53,7 +53,10 @@ export const teamsRouter = createTRPCRouter({
       )[0];
 
       if (!team) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Team failed to be created",
+        });
       }
 
       const member = (
@@ -68,7 +71,10 @@ export const teamsRouter = createTRPCRouter({
       )[0];
 
       if (!member) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Member failed to be assigned to the team created",
+        });
       }
 
       return {
@@ -77,7 +83,17 @@ export const teamsRouter = createTRPCRouter({
       };
     }),
 
-  get: teamHOFProcedure(false).query(async ({ ctx }) => {
+  getAll: userProcedure.query(async ({ ctx }) => {
+    const { db, userId } = ctx;
+
+    return await db
+      .select()
+      .from(members)
+      .innerJoin(teams, eq(members.teamId, teams.id))
+      .where(eq(members.userId, userId));
+  }),
+
+  getById: createTeamProcedure(false).query(async ({ ctx }) => {
     const { db, team, member, userId } = ctx;
 
     const remainingMemberLists = await db
@@ -92,7 +108,7 @@ export const teamsRouter = createTRPCRouter({
     };
   }),
 
-  update: teamHOFProcedure(true)
+  update: createTeamProcedure(true)
     .input(
       z.object({
         name: z.string().min(4).max(256),
@@ -110,7 +126,7 @@ export const teamsRouter = createTRPCRouter({
         .where(eq(teams.id, team.id));
     }),
 
-  updateMemberRole: teamHOFProcedure(true)
+  updateMemberRole: createTeamProcedure(true)
     .input(
       z.object({
         memberId: z.number(),
@@ -130,7 +146,7 @@ export const teamsRouter = createTRPCRouter({
         .returning();
     }),
 
-  addMembers: teamHOFProcedure(true)
+  addMembers: createTeamProcedure(true)
     .input(
       z.object({
         members: z.array(
@@ -185,7 +201,7 @@ export const teamsRouter = createTRPCRouter({
       );
     }),
 
-  removeMembers: teamHOFProcedure(true)
+  removeMembers: createTeamProcedure(true)
     .input(
       z.object({
         memberIds: z.array(z.number()),
@@ -202,7 +218,7 @@ export const teamsRouter = createTRPCRouter({
         );
     }),
 
-  hardDelete: teamHOFProcedure(true).mutation(async ({ ctx }) => {
+  hardDelete: createTeamProcedure(true).mutation(async ({ ctx }) => {
     const { db, team } = ctx;
 
     /**
@@ -243,3 +259,5 @@ export const teamsRouter = createTRPCRouter({
       );
   }),
 });
+
+export type TeamsRouterOutputs = inferRouterOutputs<typeof teamsRouter>;

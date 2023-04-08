@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { teams } from "~/db/schema/teams";
 import { and, eq } from "drizzle-orm/expressions";
 import { members } from "~/db/schema/members";
+import { channels } from "~/db/schema/channels";
 
 /**
  * Public (unauthenticated) procedure
@@ -32,7 +33,7 @@ export const userProcedure = publicProcedure.use(({ ctx, next }) => {
  * @param isAdmin pass true if want to set the procedure for admin
  * additional data in ctx - `team` and `member`
  */
-export const teamHOFProcedure = (isAdmin: boolean) =>
+export const createTeamProcedure = (isAdmin: boolean) =>
   userProcedure
     .input(
       z.object({
@@ -70,6 +71,41 @@ export const teamHOFProcedure = (isAdmin: boolean) =>
         ctx: {
           ...ctx,
           ...self,
+        },
+      });
+    });
+
+/**
+ * Protected procedure for channels
+ * @param isAdmin pass true if want to set the procedure for admin
+ * additional data in ctx - `team` and `member`
+ */
+export const createChannelProcedure = (isTeamAdmin: boolean) =>
+  createTeamProcedure(isTeamAdmin)
+    .input(
+      z.object({
+        channelId: z.number(),
+      })
+    )
+    .use(async ({ ctx, input, next }) => {
+      const { db, team } = ctx;
+
+      const channel = (
+        await db
+          .select()
+          .from(channels)
+          .where(
+            and(eq(channels.teamId, team.id), eq(channels.id, input.channelId))
+          )
+      )[0];
+
+      if (!channel) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      return next({
+        ctx: {
+          ...ctx,
+          channel,
         },
       });
     });
