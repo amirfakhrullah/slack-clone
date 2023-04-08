@@ -1,11 +1,62 @@
 import { z } from "zod";
 import { createChannelProcedure, userProcedure } from "../procedures";
 import { createTRPCRouter } from "../trpc";
-import { chats } from "~/db/schema/chats";
+import { type Chat, chats } from "~/db/schema/chats";
 import { and, desc, eq, or } from "drizzle-orm/expressions";
 import { clerkClient } from "@clerk/nextjs/server";
+import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import { observable } from "@trpc/server/observable";
+
+// types in types.d.ts
+export const ee = new MyEventEmitter();
 
 export const chatsRouter = createTRPCRouter({
+  // subscriptions for one-to-one chats
+  onAddToOtherUser: userProcedure
+    .input(
+      z.object({
+        remoteParticipant: z.string().max(191),
+      })
+    )
+    .subscription(({ ctx, input }) => {
+      const { userId } = ctx;
+      const { remoteParticipant } = input;
+
+      return observable<Chat>((emit) => {
+        const onAdd = (data: Chat) => {
+          if (
+            !data.channelId &&
+            ((data.authorId === userId &&
+              data.receiverId === remoteParticipant) ||
+              (data.authorId === remoteParticipant &&
+                data.receiverId === userId))
+          ) {
+            emit.next(data);
+          }
+        };
+        ee.on("addOneToOne", onAdd);
+        return () => {
+          ee.off("addOneToOne", onAdd);
+        };
+      });
+    }),
+
+  // subscriptions for channel chats
+  onAddToChannel: createChannelProcedure(false).subscription(({ ctx }) => {
+    const { channel } = ctx;
+    return observable<Chat>((emit) => {
+      const onAdd = (data: Chat) => {
+        if (data.channelId === channel.id) {
+          emit.next(data);
+        }
+      };
+      ee.on("addToChannel", onAdd);
+      return () => {
+        ee.off("addToChannel", onAdd);
+      };
+    });
+  }),
+
   getWithOtherUser: userProcedure
     .input(
       z.object({
@@ -67,11 +118,25 @@ export const chatsRouter = createTRPCRouter({
        */
       await clerkClient.users.getUser(receiverId);
 
-      await db.insert(chats).values({
-        authorId: userId,
-        message,
-        receiverId,
-      });
+      const newChat = (
+        await db
+          .insert(chats)
+          .values({
+            authorId: userId,
+            message,
+            receiverId,
+          })
+          .returning()
+      )[0];
+
+      if (!newChat) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to send the message",
+        });
+      }
+      ee.emit("addOneToOne", newChat);
+      return newChat;
     }),
 
   sendToChannel: createChannelProcedure(false)
@@ -84,10 +149,26 @@ export const chatsRouter = createTRPCRouter({
       const { db, channel, userId } = ctx;
       const { message } = input;
 
-      await db.insert(chats).values({
-        authorId: userId,
-        message,
-        channelId: channel.id,
-      });
+      const newChat = (
+        await db
+          .insert(chats)
+          .values({
+            authorId: userId,
+            message,
+            channelId: channel.id,
+          })
+          .returning()
+      )[0];
+
+      if (!newChat) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Unable to send the message",
+        });
+      }
+      ee.emit("addToChannel", newChat);
+      return newChat;
     }),
 });
+
+export type ChatsRouterOutputs = inferRouterOutputs<typeof chatsRouter>;

@@ -78,7 +78,7 @@ export const createTeamProcedure = (isAdmin: boolean) =>
 /**
  * Protected procedure for channels
  * @param isAdmin pass true if want to set the procedure for admin
- * additional data in ctx - `team` and `member`
+ * additional data in ctx - `team`, `member` & `channel`
  */
 export const createChannelProcedure = (isTeamAdmin: boolean) =>
   createTeamProcedure(isTeamAdmin)
