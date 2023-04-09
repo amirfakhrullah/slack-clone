@@ -3,16 +3,8 @@ import { Server } from "ws";
 import { appRouter } from "./root";
 import { createTRPCContext } from "./trpc";
 
-const wss = new Server({
+export const wss = new Server({
   port: 3001,
-  verifyClient: (info, cb) => {
-    const token = info.req.headers["authorization"];
-    const sessionId = info.req.headers["session-id"];
-
-    info.req.token = token;
-    info.req.sessionId = typeof sessionId === "string" ? sessionId : undefined;
-    cb(true);
-  },
 });
 
 const handler = applyWSSHandler({

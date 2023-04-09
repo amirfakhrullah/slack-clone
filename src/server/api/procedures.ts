@@ -5,6 +5,7 @@ import { teams } from "~/db/schema/teams";
 import { and, eq } from "drizzle-orm/expressions";
 import { members } from "~/db/schema/members";
 import { channels } from "~/db/schema/channels";
+import { sessions } from "@clerk/nextjs/dist/api";
 
 /**
  * Public (unauthenticated) procedure
@@ -15,18 +16,27 @@ export const publicProcedure = procedure;
  * Protected procedure for users
  * `ctx.userId` will be a type of string
  */
-export const userProcedure = publicProcedure.use(({ ctx, next }) => {
-  if (!ctx.userId) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
-  }
+export const userProcedure = publicProcedure
+  .input(
+    z.object({
+      sessionId: z.string(),
+      token: z.string(),
+    })
+  )
+  .use(async ({ ctx, input, next }) => {
+    const { sessionId, token } = input;
+    const session = await sessions.verifySession(sessionId, token);
+    if (!session.userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
 
-  return next({
-    ctx: {
-      ...ctx,
-      userId: ctx.userId,
-    },
+    return next({
+      ctx: {
+        ...ctx,
+        userId: session.userId,
+      },
+    });
   });
-});
 
 /**
  * Protected procedure for team users

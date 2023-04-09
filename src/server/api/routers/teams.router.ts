@@ -87,7 +87,10 @@ export const teamsRouter = createTRPCRouter({
     const { db, userId } = ctx;
 
     return await db
-      .select()
+      .select({
+        team: teams,
+        member: members,
+      })
       .from(members)
       .innerJoin(teams, eq(members.teamId, teams.id))
       .where(eq(members.userId, userId));
