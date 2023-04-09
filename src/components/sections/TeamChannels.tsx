@@ -2,10 +2,12 @@ import { useRouter } from "next/router";
 import React from "react";
 import { useSessionContext } from "~/providers/SessionProvider";
 import { api } from "~/utils/api";
+import cn from "~/utils/cn";
 
 const TeamChannels: React.FC<{
   teamId: string;
-}> = ({ teamId }) => {
+  channelId?: string;
+}> = ({ teamId, channelId }) => {
   const router = useRouter();
   const { isLoading: isTokenFetching, sessionId, token } = useSessionContext();
   const { isLoading, data: channels } = api.channel.getAll.useQuery(
@@ -16,6 +18,9 @@ const TeamChannels: React.FC<{
     },
     {
       enabled: !isTokenFetching && !!token,
+      refetchIntervalInBackground: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
     }
   );
 
@@ -37,12 +42,23 @@ const TeamChannels: React.FC<{
             channels.map((channel) => (
               <div
                 key={`teamChannel__${channel.id}`}
-                className="cursor-pointer rounded-sm px-1 py-2 text-sm duration-100 ease-in hover:bg-blue-900"
-                onClick={() => void router.push(`/${teamId}/${channel.id}`)}
+                className={cn(
+                  "cursor-pointer rounded-sm px-1 py-2 text-sm duration-100 ease-in hover:bg-blue-900",
+                  channel.id.toString() === channelId &&
+                    "cursor-not-allowed bg-blue-900"
+                )}
+                onClick={() =>
+                  channel.id.toString() !== channelId &&
+                  void router.push(`/teams/${teamId}/channels/${channel.id}`)
+                }
               >
                 <p># {channel.name}</p>
               </div>
             ))}
+
+          <div className="cursor-pointer rounded-sm px-1 py-2 text-sm">
+            <p className="text-sm text-gray-500">+ Add New Channel</p>
+          </div>
         </>
       )}
     </div>

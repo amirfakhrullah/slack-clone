@@ -5,10 +5,19 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import { Toaster } from "react-hot-toast";
 import SessionProvider from "~/providers/SessionProvider";
+import { neobrutalism } from "@clerk/themes";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <ClerkProvider {...pageProps}>
+    <ClerkProvider
+      {...pageProps}
+      appearance={{
+        baseTheme: neobrutalism,
+        variables: {
+          colorPrimary: "#312e81",
+        },
+      }}
+    >
       <SessionProvider>
         <Component {...pageProps} />
         <Toaster position="top-right" />
