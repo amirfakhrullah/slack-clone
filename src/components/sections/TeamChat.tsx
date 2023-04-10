@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import useGetMySessionToken from "~/hooks/useGetMySessionToken";
 import { type RouterOutputs, api } from "~/utils/api";
+import ChatBody from "../ChatBody";
+import InitialScreen from "../InitialScreen";
 
 const TeamChat: React.FC<{
   teamId: string;
@@ -65,9 +67,9 @@ const TeamChat: React.FC<{
   return (
     <div className="flex h-screen w-full flex-col pt-[57px]">
       {isLoading || isFetchingToken ? (
-        <div>Loading...</div>
+        <InitialScreen>Loading...</InitialScreen>
       ) : (
-        <p>{JSON.stringify(recentChats)}</p>
+        <ChatBody teamId={teamId} recentChats={recentChats} />
       )}
       <div className="fixed bottom-0 right-0 z-10 h-[57px] w-full border-t border-gray-600">
         <div className="h-full w-full pl-64">

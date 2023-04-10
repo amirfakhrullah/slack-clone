@@ -1,17 +1,18 @@
-import { toast } from "react-hot-toast";
 import { api } from "~/utils/api";
 import useGetMySessionToken from "./useGetMySessionToken";
+import { toast } from "react-hot-toast";
 
-const useGetMyTeams = (teamId?: string, channelId?: string) => {
+const useGetTeamMembers = (teamId: string) => {
   const {
     isLoading: isFetchingToken,
     token,
     sessionId,
   } = useGetMySessionToken();
-  const { isLoading, data: myTeams } = api.team.getAll.useQuery(
+  const { isLoading, data: members } = api.team.getMembers.useQuery(
     {
       sessionId,
       token,
+      teamId: parseInt(teamId),
     },
     {
       enabled: !isFetchingToken && !!token,
@@ -21,14 +22,10 @@ const useGetMyTeams = (teamId?: string, channelId?: string) => {
       refetchOnMount: false,
     }
   );
-
   return {
     isLoading: isLoading || isFetchingToken,
-    teamId,
-    channelId,
-    myTeams,
-    currentTeam: myTeams?.find((t) => t.team.id.toString() === teamId),
+    members: members ?? [],
   };
 };
 
-export default useGetMyTeams;
+export default useGetTeamMembers;

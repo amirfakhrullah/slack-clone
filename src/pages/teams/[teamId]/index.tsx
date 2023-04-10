@@ -8,7 +8,7 @@ import Sidebar from "~/components/Sidebar";
 const TeamIdPage = ({ teamId }: { teamId: string }) => {
   return (
     <>
-      <MetaHead>Team {teamId} | Slack Clone</MetaHead>
+      <MetaHead>{`Team ${teamId} | Slack Clone`}</MetaHead>
       <Screen className="flex flex-row">
         <Header />
         <Sidebar teamId={teamId} />

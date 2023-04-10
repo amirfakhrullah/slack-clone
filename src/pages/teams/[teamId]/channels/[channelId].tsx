@@ -1,5 +1,4 @@
 import { type GetServerSidePropsContext } from "next";
-import React from "react";
 import { toast } from "react-hot-toast";
 import Header from "~/components/Header";
 import MetaHead from "~/components/MetaHead";
@@ -39,7 +38,7 @@ const ChannelIdPage = ({
 
   return (
     <>
-      <MetaHead>Channel {channelId} | Slack Clone</MetaHead>
+      <MetaHead>{`Channel ${channelId} | Slack Clone`}</MetaHead>
       <Screen className="flex flex-row">
         <Header
           chatterName={

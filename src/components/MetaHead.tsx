@@ -2,7 +2,7 @@ import Head from "next/head";
 import React from "react";
 
 const MetaHead: React.FC<{
-  children?: string | string[];
+  children?: string;
 }> = ({ children }) => {
   return (
     <Head>

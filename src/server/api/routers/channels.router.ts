@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm/expressions";
 import { z } from "zod";
 import { chats } from "~/db/schema/chats";
 import { MAX_CHANNELS_PER_GROUP } from "~/limitVars";
-import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 
 export const channelsRouter = createTRPCRouter({
   create: createTeamProcedure(true)
@@ -99,5 +99,3 @@ export const channelsRouter = createTRPCRouter({
     await db.delete(channels).where(eq(channels.id, channel.id));
   }),
 });
-
-export type ChannelsRouterOutputs = inferRouterOutputs<typeof channelsRouter>;

@@ -24,7 +24,7 @@ const TeamMenu: React.FC<{
               : teamId
               ? teams?.find((t) => t.team.id.toString() === teamId)?.team
                   .name || user.username
-              : user.username}
+              : user.username || user.firstName}
           </p>
           <IoMdArrowDropdownCircle />
         </div>

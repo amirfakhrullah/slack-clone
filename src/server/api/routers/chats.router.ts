@@ -2,9 +2,9 @@ import { z } from "zod";
 import { createChannelProcedure, userProcedure } from "../procedures";
 import { createTRPCRouter } from "../trpc";
 import { type Chat, chats } from "~/db/schema/chats";
-import { and, desc, eq, or } from "drizzle-orm/expressions";
+import { and, asc, eq, or } from "drizzle-orm/expressions";
 import { clerkClient } from "@clerk/nextjs/server";
-import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 import EventEmitter, { type MyEventEmitter } from "events";
 
@@ -81,7 +81,7 @@ export const chatsRouter = createTRPCRouter({
             )
           )
         )
-        .orderBy(desc(chats.createdAt))
+        .orderBy(asc(chats.createdAt))
         .limit(50);
 
       return myChats;
@@ -94,7 +94,7 @@ export const chatsRouter = createTRPCRouter({
       .select()
       .from(chats)
       .where(eq(chats.channelId, channel.id))
-      .orderBy(desc(chats.createdAt))
+      .orderBy(asc(chats.createdAt))
       .limit(50);
 
     return teamChats;
@@ -169,5 +169,3 @@ export const chatsRouter = createTRPCRouter({
       return newChat;
     }),
 });
-
-export type ChatsRouterOutputs = inferRouterOutputs<typeof chatsRouter>;

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTeamProcedure, userProcedure } from "../procedures";
 import { createTRPCRouter } from "../trpc";
 import { teams } from "~/db/schema/teams";
-import { TRPCError, type inferRouterOutputs } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import { members } from "~/db/schema/members";
 import { and, eq, inArray, ne } from "drizzle-orm/expressions";
 import { channels } from "~/db/schema/channels";
@@ -109,6 +109,28 @@ export const teamsRouter = createTRPCRouter({
       team,
       members: [member, ...remainingMemberLists],
     };
+  }),
+
+  getMembers: createTeamProcedure(false).query(async ({ ctx }) => {
+    const { db, team } = ctx;
+    const foundMembers = await db
+      .select({
+        id: members.id,
+        role: members.role,
+        userId: members.userId,
+      })
+      .from(members)
+      .where(eq(members.teamId, team.id));
+
+    const membersInfo = await clerkClient.users.getUserList({
+      userId: foundMembers.map((mem) => mem.userId),
+    });
+
+    return membersInfo.map((info) => ({
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      ...foundMembers.find((mem) => mem.userId === info.id)!,
+      clerkInfo: info,
+    }));
   }),
 
   update: createTeamProcedure(true)
@@ -262,5 +284,3 @@ export const teamsRouter = createTRPCRouter({
       );
   }),
 });
-
-export type TeamsRouterOutputs = inferRouterOutputs<typeof teamsRouter>;
