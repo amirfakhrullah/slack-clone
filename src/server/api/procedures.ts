@@ -39,7 +39,12 @@ export const handshakeRouter = publicProcedure
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    const key = uuid();
+    let key = uuid();
+    // to avoid getting similar key with other users
+    while (handshakeMapping.has(key)) {
+      key = uuid();
+    }
+
     handshakeMapping.set(key, {
       userId: session.userId,
       lastFetched: new Date(),

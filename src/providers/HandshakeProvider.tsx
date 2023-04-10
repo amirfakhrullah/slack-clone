@@ -23,10 +23,7 @@ const HandshakeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { mutate, isLoading } = api.handshake.useMutation({
     onError: (err) => toast.error(err.message),
-    onSuccess: (data) => {
-      setKey(data.key);
-      console.log(isLoading);
-    },
+    onSuccess: (data) => setKey(data.key),
   });
 
   const fetchToken = async () => {
