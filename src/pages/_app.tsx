@@ -5,6 +5,7 @@ import { api } from "~/utils/api";
 import "~/styles/globals.css";
 import { Toaster } from "react-hot-toast";
 import { neobrutalism } from "@clerk/themes";
+import HandshakeProvider from "~/providers/HandshakeProvider";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
@@ -17,8 +18,10 @@ const MyApp: AppType = ({ Component, pageProps }) => {
         },
       }}
     >
-      <Component {...pageProps} />
-      <Toaster position="top-right" />
+      <HandshakeProvider>
+        <Component {...pageProps} />
+        <Toaster position="top-right" />
+      </HandshakeProvider>
     </ClerkProvider>
   );
 };

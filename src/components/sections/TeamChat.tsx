@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
-import useGetMySessionToken from "~/hooks/useGetMySessionToken";
 import { type RouterOutputs, api } from "~/utils/api";
 import ChatBody from "../ChatBody";
 import InitialScreen from "../InitialScreen";
+import { useHandshakeContext } from "~/providers/HandshakeProvider";
 
 const TeamChat: React.FC<{
   teamId: string;
@@ -14,37 +14,28 @@ const TeamChat: React.FC<{
   >([]);
   const [chatInput, setChatInput] = useState("");
 
-  const {
-    isLoading: isFetchingToken,
-    sessionId,
-    token,
-  } = useGetMySessionToken();
+  const { isLoading: isHandshaking, key } = useHandshakeContext();
 
   const { isLoading } = api.chat.getForChannel.useQuery(
     {
-      sessionId,
-      token,
+      key,
       teamId: parseInt(teamId),
       channelId: parseInt(channelId),
     },
     {
-      enabled: !isFetchingToken && !!token,
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      enabled: !isHandshaking && !!key,
       onSuccess: (data) => setRecentChats(data),
     }
   );
 
   api.chat.onAddToChannel.useSubscription(
     {
-      sessionId,
-      token,
+      key,
       teamId: parseInt(teamId),
       channelId: parseInt(channelId),
     },
     {
-      enabled: !isFetchingToken && !!token,
+      enabled: !isHandshaking && !!key,
       onData: (data) => setRecentChats((chats) => [...chats, data]),
     }
   );
@@ -55,8 +46,7 @@ const TeamChat: React.FC<{
 
   const handleSubmit = () => {
     mutate({
-      token,
-      sessionId,
+      key,
       teamId: parseInt(teamId),
       channelId: parseInt(channelId),
       message: chatInput,
@@ -66,7 +56,7 @@ const TeamChat: React.FC<{
 
   return (
     <div className="flex h-screen w-full flex-col pt-[57px]">
-      {isLoading || isFetchingToken ? (
+      {(isLoading || isHandshaking) ? (
         <InitialScreen>Loading...</InitialScreen>
       ) : (
         <ChatBody teamId={teamId} recentChats={recentChats} />

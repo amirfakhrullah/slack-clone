@@ -1,29 +1,22 @@
 import { toast } from "react-hot-toast";
 import { api } from "~/utils/api";
-import useGetMySessionToken from "./useGetMySessionToken";
+import { useHandshakeContext } from "~/providers/HandshakeProvider";
 
 const useGetMyTeams = (teamId?: string, channelId?: string) => {
-  const {
-    isLoading: isFetchingToken,
-    token,
-    sessionId,
-  } = useGetMySessionToken();
+  const { isLoading: isHandshaking, key } = useHandshakeContext();
+
   const { isLoading, data: myTeams } = api.team.getAll.useQuery(
     {
-      sessionId,
-      token,
+      key
     },
     {
-      enabled: !isFetchingToken && !!token,
+      enabled: !isHandshaking && !!key,
       onError: (err) => toast.error(err.message),
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
     }
   );
 
   return {
-    isLoading: isLoading || isFetchingToken,
+    isLoading: isLoading || isHandshaking,
     teamId,
     channelId,
     myTeams,

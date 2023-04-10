@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import React from "react";
-import useGetMySessionToken from "~/hooks/useGetMySessionToken";
+import { useHandshakeContext } from "~/providers/HandshakeProvider";
 import { api } from "~/utils/api";
 import cn from "~/utils/cn";
 
@@ -9,22 +9,14 @@ const TeamChannels: React.FC<{
   channelId?: string;
 }> = ({ teamId, channelId }) => {
   const router = useRouter();
-  const {
-    isLoading: isFetchingToken,
-    sessionId,
-    token,
-  } = useGetMySessionToken();
+  const { isLoading: isHandshaking, key } = useHandshakeContext();
   const { isLoading, data: channels } = api.channel.getAll.useQuery(
     {
-      sessionId,
-      token,
+      key,
       teamId: parseInt(teamId),
     },
     {
-      enabled: !isFetchingToken && !!token,
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      enabled: !isHandshaking && !!key,
     }
   );
 

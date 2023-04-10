@@ -5,7 +5,7 @@ import MetaHead from "~/components/MetaHead";
 import Screen from "~/components/Screen";
 import Sidebar from "~/components/Sidebar";
 import TeamChat from "~/components/sections/TeamChat";
-import useGetMySessionToken from "~/hooks/useGetMySessionToken";
+import { useHandshakeContext } from "~/providers/HandshakeProvider";
 import { api } from "~/utils/api";
 
 const ChannelIdPage = ({
@@ -16,23 +16,18 @@ const ChannelIdPage = ({
   channelId: string;
 }) => {
   const {
-    isLoading: isFetchingToken,
-    sessionId,
-    token,
-  } = useGetMySessionToken();
+    isLoading: isHandshaking,
+    key,
+  } = useHandshakeContext();
   const { isLoading, data: channel } = api.channel.getById.useQuery(
     {
-      sessionId,
-      token,
+      key,
       teamId: parseInt(teamId),
       channelId: parseInt(channelId),
     },
     {
-      enabled: !isFetchingToken && !!token,
+      enabled: !isHandshaking && !!key,
       onError: (err) => toast.error(err.message),
-      refetchIntervalInBackground: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
     }
   );
 
@@ -42,7 +37,7 @@ const ChannelIdPage = ({
       <Screen className="flex flex-row">
         <Header
           chatterName={
-            isFetchingToken || isLoading ? "Loading..." : channel?.name
+            isHandshaking || isLoading ? "Loading..." : channel?.name
           }
         />
         <Sidebar teamId={teamId} channelId={channelId} />

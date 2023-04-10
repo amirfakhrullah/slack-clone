@@ -5,12 +5,47 @@ import { teams } from "~/db/schema/teams";
 import { and, eq } from "drizzle-orm/expressions";
 import { members } from "~/db/schema/members";
 import { channels } from "~/db/schema/channels";
-import { sessions } from "@clerk/nextjs/dist/api";
+import { type Session, sessions } from "@clerk/nextjs/dist/api";
+import { uuid } from "uuidv4";
+
+// userId to ws token
+const handshakeMapping = new Map<
+  string,
+  {
+    userId: string;
+    lastFetched: Date;
+  }
+>();
 
 /**
  * Public (unauthenticated) procedure
  */
 export const publicProcedure = procedure;
+
+export const handshakeRouter = publicProcedure
+  .input(
+    z.object({
+      sessionId: z.string(),
+      token: z.string(),
+    })
+  )
+  .mutation(async ({ input }) => {
+    const { sessionId, token } = input;
+    let session: Session;
+
+    try {
+      session = await sessions.verifySession(sessionId, token);
+    } catch (_) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    const key = uuid();
+    handshakeMapping.set(key, {
+      userId: session.userId,
+      lastFetched: new Date(),
+    });
+    return { key };
+  });
 
 /**
  * Protected procedure for users
@@ -19,21 +54,21 @@ export const publicProcedure = procedure;
 export const userProcedure = publicProcedure
   .input(
     z.object({
-      sessionId: z.string(),
-      token: z.string(),
+      key: z.string(),
     })
   )
   .use(async ({ ctx, input, next }) => {
-    const { sessionId, token } = input;
-    const session = await sessions.verifySession(sessionId, token);
-    if (!session.userId) {
+    const { key } = input;
+    if (!handshakeMapping.has(key)) {
       throw new TRPCError({ code: "UNAUTHORIZED" });
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const { userId } = handshakeMapping.get(key)!;
 
     return next({
       ctx: {
         ...ctx,
-        userId: session.userId,
+        userId,
       },
     });
   });
