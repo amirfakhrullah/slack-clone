@@ -5,7 +5,8 @@ import Header from "~/components/Header";
 import MetaHead from "~/components/MetaHead";
 import Screen from "~/components/Screen";
 import Sidebar from "~/components/Sidebar";
-import { useSessionContext } from "~/providers/SessionProvider";
+import TeamChat from "~/components/sections/TeamChat";
+import useGetMySessionToken from "~/hooks/useGetMySessionToken";
 import { api } from "~/utils/api";
 
 const ChannelIdPage = ({
@@ -15,7 +16,11 @@ const ChannelIdPage = ({
   teamId: string;
   channelId: string;
 }) => {
-  const { isLoading: isFetchingToken, sessionId, token } = useSessionContext();
+  const {
+    isLoading: isFetchingToken,
+    sessionId,
+    token,
+  } = useGetMySessionToken();
   const { isLoading, data: channel } = api.channel.getById.useQuery(
     {
       sessionId,
@@ -42,6 +47,7 @@ const ChannelIdPage = ({
           }
         />
         <Sidebar teamId={teamId} channelId={channelId} />
+        <TeamChat teamId={teamId} channelId={channelId}  />
       </Screen>
     </>
   );

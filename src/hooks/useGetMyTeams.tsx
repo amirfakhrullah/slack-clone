@@ -1,10 +1,14 @@
 import { usePathname } from "next/navigation";
 import { toast } from "react-hot-toast";
-import { useSessionContext } from "~/providers/SessionProvider";
 import { api } from "~/utils/api";
+import useGetMySessionToken from "./useGetMySessionToken";
 
 const useGetMyTeams = () => {
-  const { isLoading: isTokenFetching, token, sessionId } = useSessionContext();
+  const {
+    isLoading: isFetchingToken,
+    token,
+    sessionId,
+  } = useGetMySessionToken();
   const pathname = usePathname();
   const { isLoading, data: myTeams } = api.team.getAll.useQuery(
     {
@@ -12,7 +16,7 @@ const useGetMyTeams = () => {
       token,
     },
     {
-      enabled: !isTokenFetching && !!token,
+      enabled: !isFetchingToken && !!token,
       onError: (err) => toast.error(err.message),
       refetchIntervalInBackground: false,
       refetchOnWindowFocus: false,
@@ -28,7 +32,7 @@ const useGetMyTeams = () => {
     : undefined;
 
   return {
-    isLoading: isLoading || isTokenFetching,
+    isLoading: isLoading || isFetchingToken,
     teamId,
     channelId,
     pathname,

@@ -27,10 +27,8 @@ export const chatsRouter = createTRPCRouter({
         const onAdd = (data: Chat) => {
           if (
             !data.channelId &&
-            ((data.authorId === userId &&
-              data.receiverId === remoteParticipant) ||
-              (data.authorId === remoteParticipant &&
-                data.receiverId === userId))
+            data.authorId === remoteParticipant &&
+            data.receiverId === userId
           ) {
             emit.next(data);
           }
@@ -47,7 +45,7 @@ export const chatsRouter = createTRPCRouter({
     const { channel } = ctx;
     return observable<Chat>((emit) => {
       const onAdd = (data: Chat) => {
-        if (data.channelId === channel.id) {
+        if (data.channelId?.toString() === channel.id?.toString()) {
           emit.next(data);
         }
       };

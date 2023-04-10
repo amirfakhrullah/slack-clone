@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import React from "react";
-import { useSessionContext } from "~/providers/SessionProvider";
+import useGetMySessionToken from "~/hooks/useGetMySessionToken";
 import { api } from "~/utils/api";
 import cn from "~/utils/cn";
 
@@ -9,7 +9,11 @@ const TeamChannels: React.FC<{
   channelId?: string;
 }> = ({ teamId, channelId }) => {
   const router = useRouter();
-  const { isLoading: isTokenFetching, sessionId, token } = useSessionContext();
+  const {
+    isLoading: isFetchingToken,
+    sessionId,
+    token,
+  } = useGetMySessionToken();
   const { isLoading, data: channels } = api.channel.getAll.useQuery(
     {
       sessionId,
@@ -17,7 +21,7 @@ const TeamChannels: React.FC<{
       teamId: parseInt(teamId),
     },
     {
-      enabled: !isTokenFetching && !!token,
+      enabled: !isFetchingToken && !!token,
       refetchIntervalInBackground: false,
       refetchOnWindowFocus: false,
       refetchOnMount: false,
