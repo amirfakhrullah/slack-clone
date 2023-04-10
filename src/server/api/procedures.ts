@@ -8,6 +8,11 @@ import { channels } from "~/db/schema/channels";
 import { type Session, sessions } from "@clerk/nextjs/dist/api";
 import { uuid } from "uuidv4";
 
+/**
+ * Public (unauthenticated) procedure
+ */
+export const publicProcedure = procedure;
+
 // userId to ws token
 const handshakeMapping = new Map<
   string,
@@ -16,11 +21,6 @@ const handshakeMapping = new Map<
     lastFetched: Date;
   }
 >();
-
-/**
- * Public (unauthenticated) procedure
- */
-export const publicProcedure = procedure;
 
 export const handshakeRouter = publicProcedure
   .input(
