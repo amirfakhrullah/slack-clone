@@ -56,17 +56,18 @@ const TeamChat: React.FC<{
 
   return (
     <div className="flex h-screen w-full flex-col pt-[57px]">
-      {(isLoading || isHandshaking) ? (
+      {isLoading || isHandshaking ? (
         <InitialScreen>Loading...</InitialScreen>
       ) : (
         <ChatBody teamId={teamId} recentChats={recentChats} />
       )}
       <div className="fixed bottom-0 right-0 z-10 h-[57px] w-full border-t border-gray-600">
-        <div className="h-full w-full pl-64">
+        <div className="flex h-full w-full  items-center justify-center pl-64">
           <input
             onChange={(e) => setChatInput(e.target.value)}
             value={chatInput}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            className="p2 m-2 w-[98%] border border-gray-600 bg-transparent"
           />
         </div>
       </div>

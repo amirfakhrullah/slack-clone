@@ -35,7 +35,7 @@ const TeamMenu: React.FC<{
         )}
       >
         <div className="p-2" onClick={() => void router.push("/")}>
-          <p>{!user ? "Loading..." : user.username}</p>
+          <p>{!user ? "Loading..." : user.username || user.firstName}</p>
         </div>
         {isLoading && (
           <div className="p-2">
