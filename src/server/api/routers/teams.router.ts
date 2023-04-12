@@ -3,7 +3,7 @@ import { createTeamProcedure, userProcedure } from "../procedures";
 import { createTRPCRouter } from "../trpc";
 import { teams } from "~/db/schema/teams";
 import { TRPCError } from "@trpc/server";
-import { Member, members } from "~/db/schema/members";
+import { type Member, members } from "~/db/schema/members";
 import { and, eq, inArray, ne } from "drizzle-orm/expressions";
 import { channels } from "~/db/schema/channels";
 import { chats } from "~/db/schema/chats";
