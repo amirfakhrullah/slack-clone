@@ -96,7 +96,7 @@ export const createTeamProcedure = (isAdmin: boolean) =>
       const foundMembers = await db
         .select({
           team: teams,
-          member: members,
+          selfMember: members,
         })
         .from(members)
         .innerJoin(teams, eq(members.teamId, teams.id))
@@ -113,7 +113,7 @@ export const createTeamProcedure = (isAdmin: boolean) =>
 
       const self = foundMembers[0];
 
-      if (isAdmin && self.member.role !== "admin") {
+      if (isAdmin && self.selfMember.role !== "admin") {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
 

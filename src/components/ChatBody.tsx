@@ -1,16 +1,15 @@
 import { useUser } from "@clerk/nextjs";
 import React from "react";
-import useGetTeamMembers from "~/hooks/useGetTeamMembers";
 import { type RouterOutputs } from "~/utils/api";
 import InitialScreen from "./InitialScreen";
 import Image from "next/image";
+import { useTeamContext } from "~/providers/TeamProvider";
 
 const ChatBody: React.FC<{
-  teamId: string;
   recentChats: RouterOutputs["chat"]["getForChannel"];
-}> = ({ teamId, recentChats }) => {
+}> = ({ recentChats }) => {
   const { user } = useUser();
-  const { isLoading, members } = useGetTeamMembers(teamId);
+  const { isLoadingTeam, members } = useTeamContext();
 
   const isMyMessage = (chat: RouterOutputs["chat"]["getForChannel"][number]) =>
     user ? chat.authorId === user.id : false;
@@ -18,7 +17,7 @@ const ChatBody: React.FC<{
   const whosMessage = (chat: RouterOutputs["chat"]["getForChannel"][number]) =>
     members.find((member) => member.userId === chat.authorId);
 
-  if (isLoading) return null;
+  if (isLoadingTeam) return null;
 
   if (recentChats.length === 0)
     return <InitialScreen>Start Chatting!</InitialScreen>;

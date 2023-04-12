@@ -2,12 +2,12 @@ import { toast } from "react-hot-toast";
 import { api } from "~/utils/api";
 import { useHandshakeContext } from "~/providers/HandshakeProvider";
 
-const useGetMyTeams = (teamId?: string, channelId?: string) => {
+const useGetMyTeams = () => {
   const { isLoading: isHandshaking, key } = useHandshakeContext();
 
   const { isLoading, data: myTeams } = api.team.getAll.useQuery(
     {
-      key
+      key,
     },
     {
       enabled: !isHandshaking && !!key,
@@ -17,10 +17,7 @@ const useGetMyTeams = (teamId?: string, channelId?: string) => {
 
   return {
     isLoading: isLoading || isHandshaking,
-    teamId,
-    channelId,
     myTeams,
-    currentTeam: myTeams?.find((t) => t.team.id.toString() === teamId),
   };
 };
 

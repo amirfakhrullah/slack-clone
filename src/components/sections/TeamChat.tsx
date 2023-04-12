@@ -59,7 +59,7 @@ const TeamChat: React.FC<{
       {isLoading || isHandshaking ? (
         <InitialScreen>Loading...</InitialScreen>
       ) : (
-        <ChatBody teamId={teamId} recentChats={recentChats} />
+        <ChatBody recentChats={recentChats} />
       )}
       <div className="fixed bottom-0 right-0 z-10 h-[57px] w-full border-t border-gray-600">
         <div className="flex h-full w-full  items-center justify-center pl-64">

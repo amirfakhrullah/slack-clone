@@ -6,7 +6,7 @@ const Sidebar: React.FC<{
   teamId?: string;
   channelId?: string;
 }> = ({ teamId, channelId }) => {
-  const { isLoading, myTeams } = useGetMyTeams(teamId, channelId);
+  const { isLoading, myTeams } = useGetMyTeams();
   return (
     <div className="h-screen w-80">
       <div className="fixed left-0 top-0 z-20 h-screen w-64 bg-blue-950">

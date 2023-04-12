@@ -1,6 +1,8 @@
 interface MyEvents {
   addOneToOne: (data: Chat) => void;
   addToChannel: (data: Chat) => void;
+  deleteInOneToOne: (data: Chat) => void;
+  deleteInChannel: (data: Chat) => void;
 }
 
 declare module "events" {

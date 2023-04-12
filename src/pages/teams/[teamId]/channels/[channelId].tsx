@@ -1,12 +1,11 @@
 import { type GetServerSidePropsContext } from "next";
-import { toast } from "react-hot-toast";
+import { useEffect } from "react";
 import Header from "~/components/Header";
 import MetaHead from "~/components/MetaHead";
 import Screen from "~/components/Screen";
 import Sidebar from "~/components/Sidebar";
 import TeamChat from "~/components/sections/TeamChat";
-import { useHandshakeContext } from "~/providers/HandshakeProvider";
-import { api } from "~/utils/api";
+import { useTeamContext } from "~/providers/TeamProvider";
 
 const ChannelIdPage = ({
   teamId,
@@ -16,32 +15,39 @@ const ChannelIdPage = ({
   channelId: string;
 }) => {
   const {
-    isLoading: isHandshaking,
-    key,
-  } = useHandshakeContext();
-  const { isLoading, data: channel } = api.channel.getById.useQuery(
-    {
-      key,
-      teamId: parseInt(teamId),
-      channelId: parseInt(channelId),
-    },
-    {
-      enabled: !isHandshaking && !!key,
-      onError: (err) => toast.error(err.message),
+    setCurrentTeamId,
+    currentTeamId,
+    currentChannelId,
+    setCurrentChannelId,
+    isLoadingChannel,
+    channel,
+  } = useTeamContext();
+
+  useEffect(() => {
+    if (currentTeamId !== teamId) {
+      setCurrentTeamId(teamId);
     }
-  );
+    if (currentChannelId !== channelId) {
+      setCurrentChannelId(channelId);
+    }
+    // eslint-disable-next-line
+  }, [teamId, channelId]);
 
   return (
     <>
-      <MetaHead>{`Channel ${channelId} | Slack Clone`}</MetaHead>
+      <MetaHead>
+        {isLoadingChannel
+          ? "Loading..."
+          : `Channel | ${channel?.name ?? channelId}`}
+      </MetaHead>
       <Screen className="flex flex-row">
         <Header
           chatterName={
-            isHandshaking || isLoading ? "Loading..." : channel?.name
+            isLoadingChannel ? "Loading..." : channel?.name ?? channelId
           }
         />
         <Sidebar teamId={teamId} channelId={channelId} />
-        <TeamChat teamId={teamId} channelId={channelId}  />
+        <TeamChat teamId={teamId} channelId={channelId} />
       </Screen>
     </>
   );

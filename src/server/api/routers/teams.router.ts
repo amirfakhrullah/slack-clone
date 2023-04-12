@@ -97,36 +97,28 @@ export const teamsRouter = createTRPCRouter({
   }),
 
   getById: createTeamProcedure(false).query(async ({ ctx }) => {
-    const { db, team, member, userId } = ctx;
+    const { db, team, selfMember } = ctx;
 
     const remainingMemberLists = await db
-      .select()
-      .from(members)
-      // only get the remaining members, since we already get self member data in procedure
-      .where(and(eq(members.teamId, team.id), ne(members.userId, userId)));
-
-    return {
-      team,
-      members: [member, ...remainingMemberLists],
-    };
-  }),
-
-  getMembers: createTeamProcedure(false).query(async ({ ctx }) => {
-    const { db, team } = ctx;
-    const foundMembers = await db
       .select({
         id: members.id,
         role: members.role,
         userId: members.userId,
       })
       .from(members)
-      .where(eq(members.teamId, team.id));
+      // only get the remaining members, since we already get self member data in procedure
+      .where(and(eq(members.teamId, team.id), ne(members.id, selfMember.id)));
 
     const userIdToMemberDataMapping = new Map<
       string,
       Pick<Member, "id" | "role" | "userId">
     >();
-    for (const member of foundMembers) {
+    userIdToMemberDataMapping.set(selfMember.userId, {
+      id: selfMember.id,
+      role: selfMember.role,
+      userId: selfMember.userId,
+    });
+    for (const member of remainingMemberLists) {
       userIdToMemberDataMapping.set(member.userId, member);
     }
 
@@ -134,11 +126,14 @@ export const teamsRouter = createTRPCRouter({
       userId: Array.from(userIdToMemberDataMapping.keys()),
     });
 
-    return membersClerkInfo.map((info) => ({
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      ...userIdToMemberDataMapping.get(info.id)!,
-      clerkInfo: info,
-    }));
+    return {
+      team,
+      members: membersClerkInfo.map((info) => ({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ...userIdToMemberDataMapping.get(info.id)!,
+        clerkInfo: info,
+      })),
+    };
   }),
 
   update: createTeamProcedure(true)
@@ -191,7 +186,7 @@ export const teamsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { db, team, member } = ctx;
+      const { db, team, selfMember } = ctx;
       const { members: requestedMembers } = input;
 
       // check is the userIds exist in Clerk
@@ -208,11 +203,13 @@ export const teamsRouter = createTRPCRouter({
 
       // validation: MAX_MEMBERS_PER_GROUP
       const currentMembers = [
-        member,
+        selfMember,
         ...(await db
           .select()
           .from(members)
-          .where(and(eq(members.teamId, team.id), ne(members.id, member.id)))),
+          .where(
+            and(eq(members.teamId, team.id), ne(members.id, selfMember.id))
+          )),
       ];
 
       if (
@@ -255,40 +252,26 @@ export const teamsRouter = createTRPCRouter({
     const { db, team } = ctx;
 
     /**
-     * Need to run in sequence since some tables relies on other tables
+     * Need to run in sequence since some tables relies on other tables (so cannot use Promise.all)
      * Sequence:
      * 1- Get all channelIds that belong to the team
      * 2- Delete all chats with the channelIds
-     * 3- Delete all channels with the teamId
+     * 3- Delete all channels with the teamId or channelIds
      * 4- Delete all members with the teamId
      * 5- Delete the team by teamId
      */
-    await db
-      .select({
-        channelId: channels.id,
-      })
-      .from(channels)
-      .where(eq(channels.teamId, team.id))
-      .then((teamChannels) =>
-        db
-          .delete(chats)
-          .where(
-            inArray(
-              chats.channelId,
-              teamChannels.map((channel) => channel.channelId)
-            )
-          )
-          .then(() =>
-            db
-              .delete(channels)
-              .where(eq(channels.teamId, team.id))
-              .then(() =>
-                db
-                  .delete(members)
-                  .where(eq(members.teamId, team.id))
-                  .then(() => db.delete(teams).where(eq(teams.id, team.id)))
-              )
-          )
-      );
+    const channelIds = (
+      await db
+        .select({
+          channelId: channels.id,
+        })
+        .from(channels)
+        .where(eq(channels.teamId, team.id))
+    ).map((channels) => channels.channelId);
+
+    await db.delete(chats).where(inArray(chats.channelId, channelIds));
+    await db.delete(channels).where(eq(channels.teamId, team.id));
+    await db.delete(members).where(eq(members.teamId, team.id));
+    await db.delete(teams).where(eq(teams.id, team.id));
   }),
 });

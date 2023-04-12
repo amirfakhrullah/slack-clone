@@ -58,6 +58,41 @@ export const chatsRouter = createTRPCRouter({
     });
   }),
 
+  // subscriptions for deleting chats one-to-one
+  onDeleteInOneToOne: userProcedure.subscription(({ ctx }) => {
+    const { userId } = ctx;
+    return observable<Chat>((emit) => {
+      const onDelete = (data: Chat) => {
+        if (
+          !data.channelId &&
+          (data.authorId === userId || data.receiverId === userId)
+        ) {
+          emit.next(data);
+        }
+      };
+      ee.on("deleteInOneToOne", onDelete);
+      return () => {
+        ee.off("deleteInOneToOne", onDelete);
+      };
+    });
+  }),
+
+  // subscriptions for deleting chats in channel
+  onDeleteInChannel: createChannelProcedure(false).subscription(({ ctx }) => {
+    const { channel } = ctx;
+    return observable<Chat>((emit) => {
+      const onDelete = (data: Chat) => {
+        if (data.channelId === channel.id) {
+          emit.next(data);
+        }
+      };
+      ee.on("deleteInChannel", onDelete);
+      return () => {
+        ee.off("deleteInChannel", onDelete);
+      };
+    });
+  }),
+
   getWithOtherUser: userProcedure
     .input(
       z.object({
@@ -68,7 +103,7 @@ export const chatsRouter = createTRPCRouter({
       const { db, userId } = ctx;
       const { remoteParticipant } = input;
 
-      const myChats = await db
+      return await db
         .select()
         .from(chats)
         .where(
@@ -85,21 +120,17 @@ export const chatsRouter = createTRPCRouter({
         )
         .orderBy(asc(chats.createdAt))
         .limit(50);
-
-      return myChats;
     }),
 
   getForChannel: createChannelProcedure(false).query(async ({ ctx }) => {
     const { db, channel } = ctx;
 
-    const teamChats = await db
+    return await db
       .select()
       .from(chats)
       .where(eq(chats.channelId, channel.id))
       .orderBy(asc(chats.createdAt))
       .limit(50);
-
-    return teamChats;
   }),
 
   sendToOtherUser: userProcedure
@@ -117,7 +148,11 @@ export const chatsRouter = createTRPCRouter({
        * validate if receiverId exists in Clerk
        * Will throw if invalid
        */
-      await clerkClient.users.getUser(receiverId);
+      try {
+        await clerkClient.users.getUser(receiverId);
+      } catch (_) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
 
       const newChat = (
         await db
@@ -169,5 +204,37 @@ export const chatsRouter = createTRPCRouter({
       }
       ee.emit("addToChannel", newChat);
       return newChat;
+    }),
+
+  hardDelete: userProcedure
+    .input(
+      z.object({
+        chatId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, userId } = ctx;
+
+      const myChat = (
+        await db
+          .select()
+          .from(chats)
+          .where(and(eq(chats.id, input.chatId), eq(chats.authorId, userId)))
+      )[0];
+
+      if (!myChat) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Chat not found",
+        });
+      }
+
+      if (myChat.channelId) {
+        ee.emit("deleteInChannel", myChat);
+      } else {
+        ee.emit("deleteInOneToOne", myChat);
+      }
+
+      await db.delete(chats).where(eq(chats.id, myChat.id));
     }),
 });
