@@ -13,7 +13,7 @@ import { uuid } from "uuidv4";
  */
 export const publicProcedure = procedure;
 
-// userId to ws token
+// key to { userId, lastFetched }
 const handshakeMapping = new Map<
   string,
   {

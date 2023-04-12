@@ -31,4 +31,4 @@ export const members = pgTable(
   })
 );
 
-export type Team = InferModel<typeof members>;
+export type Member = InferModel<typeof members>;

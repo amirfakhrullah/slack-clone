@@ -3,7 +3,7 @@ import { createTeamProcedure, userProcedure } from "../procedures";
 import { createTRPCRouter } from "../trpc";
 import { teams } from "~/db/schema/teams";
 import { TRPCError } from "@trpc/server";
-import { members } from "~/db/schema/members";
+import { Member, members } from "~/db/schema/members";
 import { and, eq, inArray, ne } from "drizzle-orm/expressions";
 import { channels } from "~/db/schema/channels";
 import { chats } from "~/db/schema/chats";
@@ -26,7 +26,7 @@ export const teamsRouter = createTRPCRouter({
       // validation: MAX_GROUPS_CREATED_PER_USER
       const currentTeamsOwned = await db
         .select({
-          team: teams.id,
+          id: teams.id,
         })
         .from(teams)
         .where(eq(teams.ownerId, userId));
@@ -122,13 +122,21 @@ export const teamsRouter = createTRPCRouter({
       .from(members)
       .where(eq(members.teamId, team.id));
 
-    const membersInfo = await clerkClient.users.getUserList({
-      userId: foundMembers.map((mem) => mem.userId),
+    const userIdToMemberDataMapping = new Map<
+      string,
+      Pick<Member, "id" | "role" | "userId">
+    >();
+    for (const member of foundMembers) {
+      userIdToMemberDataMapping.set(member.userId, member);
+    }
+
+    const membersClerkInfo = await clerkClient.users.getUserList({
+      userId: Array.from(userIdToMemberDataMapping.keys()),
     });
 
-    return membersInfo.map((info) => ({
+    return membersClerkInfo.map((info) => ({
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      ...foundMembers.find((mem) => mem.userId === info.id)!,
+      ...userIdToMemberDataMapping.get(info.id)!,
       clerkInfo: info,
     }));
   }),
