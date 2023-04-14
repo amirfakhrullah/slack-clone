@@ -2,7 +2,7 @@ import { createTRPCRouter } from "../../server/api/trpc";
 import { teamsRouter } from "./routers/teams.router";
 import { channelsRouter } from "./routers/channels.router";
 import { chatsRouter } from "./routers/chats.router";
-import { handshakeRouter } from "./procedures";
+import { handshakeRouter } from "./routers/handshake.router";
 
 export const appRouter = createTRPCRouter({
   handshake: handshakeRouter,

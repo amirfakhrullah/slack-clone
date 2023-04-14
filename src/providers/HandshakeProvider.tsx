@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { api } from "~/utils/api";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 
 interface HandshakeContextValues {
@@ -17,7 +16,6 @@ export const HandshakeContext = createContext<HandshakeContextValues>({
 export const useHandshakeContext = () => useContext(HandshakeContext);
 
 const HandshakeProvider = ({ children }: { children: React.ReactNode }) => {
-  const pathname = usePathname();
   const [key, setKey] = useState("");
   const { sessionId, getToken } = useAuth();
 
@@ -28,7 +26,7 @@ const HandshakeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchToken = async () => {
     const token = await getToken();
-    if (token && sessionId) {
+    if (token) {
       mutate({
         token,
         sessionId: sessionId ?? "",
@@ -37,15 +35,22 @@ const HandshakeProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    if (
-      !key &&
-      !pathname.startsWith("/sign-in") &&
-      !pathname.startsWith("/sign-up")
-    ) {
+    if (sessionId && !key) {
       void fetchToken();
     }
-    // eslint-disable-next-line
-  }, [key, pathname, sessionId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, sessionId]);
+
+  // refetch every 50 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (key && sessionId) {
+        void fetchToken();
+      }
+    }, 50 * 60 * 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, sessionId]);
 
   return (
     <HandshakeContext.Provider
