@@ -45,6 +45,8 @@ const TeamChat: React.FC<{
   });
 
   const handleSubmit = () => {
+    if (!chatInput) return;
+    
     mutate({
       key,
       teamId: parseInt(teamId),

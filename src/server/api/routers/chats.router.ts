@@ -137,7 +137,7 @@ export const chatsRouter = createTRPCRouter({
     .input(
       z.object({
         receiverId: z.string().max(191),
-        message: z.string().max(256),
+        message: z.string().min(1).max(256),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -178,7 +178,7 @@ export const chatsRouter = createTRPCRouter({
   sendToChannel: createChannelProcedure(false)
     .input(
       z.object({
-        message: z.string().max(256),
+        message: z.string().min(1).max(256),
       })
     )
     .mutation(async ({ ctx, input }) => {
