@@ -34,7 +34,7 @@ const TeamMenu: React.FC<{
           "z-20 w-60 rounded-md border-none bg-gray-100 p-2 text-gray-800 shadow-md"
         )}
       >
-        <div className="p-2" onClick={() => void router.push("/")}>
+        <div className="p-2 hover:bg-gray-300 ease duration-100 cursor-pointer" onClick={() => void router.push("/")}>
           <p>{!user ? "Loading..." : user.username || user.firstName}</p>
         </div>
         {isLoading && (
@@ -46,14 +46,14 @@ const TeamMenu: React.FC<{
           teams &&
           teams.map((val, idx) => (
             <div
-              className="p-2"
+              className="p-2 hover:bg-gray-300 ease duration-100 cursor-pointer"
               key={`${val.team.id}__${idx}`}
               onClick={() => void router.push(`/teams/${val.team.id}`)}
             >
               <p>{val.team.name}</p>
             </div>
           ))}
-        <div className="p-2">
+        <div className="p-2 hover:bg-gray-300 ease duration-100 cursor-pointer">
           <p>+ Add New Team</p>
         </div>
       </MenuList>
