@@ -11,3 +11,7 @@ Slack Clone built for learning/experimenting with new techstacks (Drizzle Orm, t
 - [tRPC subscriptions](https://trpc.io/docs/subscriptions)
 - [Clerk Auth](https://clerk.com/)
 - [Drizzle Orm](https://github.com/drizzle-team/drizzle-orm)
+
+## License
+
+License under the [MIT License](./LICENSE)
