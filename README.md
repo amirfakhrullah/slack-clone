@@ -1,6 +1,6 @@
 # Slack Clone
 
-Slack Clone built for learning/experimenting with new techstacks (tRPC subscriptions, Clerk, Drizzle Orm, etc)
+Slack Clone built for learning/experimenting with new techstacks (Drizzle Orm, tRPC subscriptions and Clerk Auth)
 
 > **Warning**
 > This project is in the development, and it is mainly for learning purposes
@@ -9,7 +9,5 @@ Slack Clone built for learning/experimenting with new techstacks (tRPC subscript
 
 - Starter template with [Create-T3-App](https://create.t3.gg/) (without Prisma and NextAuth)
 - [tRPC subscriptions](https://trpc.io/docs/subscriptions)
-- [Clerk](https://clerk.com/)
+- [Clerk Auth](https://clerk.com/)
 - [Drizzle Orm](https://github.com/drizzle-team/drizzle-orm)
-- [Next.js](https://nextjs.org/)
-- [TailwindCSS](https://tailwindcss.com/)
