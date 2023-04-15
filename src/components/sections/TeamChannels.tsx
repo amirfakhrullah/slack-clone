@@ -1,7 +1,6 @@
 import { useRouter } from "next/router";
 import React from "react";
-import { useHandshakeContext } from "~/providers/HandshakeProvider";
-import { api } from "~/utils/api";
+import useGetTeamChannels from "~/hooks/useGetTeamChannels";
 import cn from "~/utils/cn";
 
 const TeamChannels: React.FC<{
@@ -9,16 +8,7 @@ const TeamChannels: React.FC<{
   channelId?: string;
 }> = ({ teamId, channelId }) => {
   const router = useRouter();
-  const { isLoading: isHandshaking, key } = useHandshakeContext();
-  const { isLoading, data: channels } = api.channel.getAll.useQuery(
-    {
-      key,
-      teamId: parseInt(teamId),
-    },
-    {
-      enabled: !isHandshaking && !!key,
-    }
-  );
+  const { isLoading, channels } = useGetTeamChannels(teamId);
 
   return (
     <div className="m-2 mt-4 rounded-md border border-gray-700 p-2">
@@ -34,8 +24,7 @@ const TeamChannels: React.FC<{
               <p className="text-sm text-gray-500">No channel created.</p>
             </div>
           )}
-          {channels &&
-            channels.map((channel) => (
+          {channels.map((channel) => (
               <div
                 key={`teamChannel__${channel.id}`}
                 className={cn(
